@@ -3,7 +3,8 @@
    [org.jibble.pircbot PircBot])
  (:require
    [com.randomfault.markov :as brains]
-   [clojure.contrib.seq-utils :as seq])
+   [clojure.contrib.seq-utils :as seq]
+   [clojure.http.client :as http])
  (:gen-class
    :extends org.jibble.pircbot.PircBot
    :init init
@@ -41,14 +42,23 @@
 
 (defmethod respond :command [tokens]
   (cond
+
     (.equalsIgnoreCase (first tokens) ",become")
     (if (>= (count tokens) 2)
       (dosync (ref-set current (nth tokens 1)))
       "Who do you want me to be?")
+
     (.equalsIgnoreCase (first tokens) ",who")
-    (format "I am %s" @current)))
+    (if (.equalsIgnoreCase "aevans" @current)
+      (format "I am the ghost of aevans.")
+      (format "I am %s." @current))
+
+    (.equalsIgnoreCase (first tokens) ",fail")
+    ((http/request "http://failblog.org/?random") :url)))
 
 (defn -onMessage [this channel sender login hostname message]
   (if (.startsWith message nick)
     (let [response (respond (rest (.split message " ")))]
-      (.sendMessage this channel response))))
+      (.sendMessage this channel response))
+    (brains/add-line-to-nick-set message (@brains/nick-sets @current))))
+

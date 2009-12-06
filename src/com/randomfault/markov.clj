@@ -48,6 +48,9 @@
   (is (= {'("a" "b") #{"c" "d"}}
         (add-line-to-nick-set "a b c" {'("a" "b") #{"d"}}))))
 
+(defn write-nick-sets [file-name obj]
+  (binding [*out* (java.io.FileWriter. file-name)]
+    (pr obj)))
 
 (defn parse-json [file-name]
   (doseq [element (json/decode-from-reader (java.io.FileReader. file-name))]
@@ -57,7 +60,6 @@
           nick-sets
           (assoc @nick-sets nick
             (add-line-to-nick-set line (@nick-sets nick))))))))
-
 
 ;; functions that create sentences
 ;
@@ -90,4 +92,5 @@
         (.append word)
         (.append " ")))
     (.toString sentence-buffer)))
+
 
